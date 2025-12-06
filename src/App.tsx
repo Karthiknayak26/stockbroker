@@ -8,8 +8,16 @@ import { Settings } from './components/Settings';
 import { Layout } from './components/Layout';
 
 const AppContent: React.FC = () => {
-    const { user } = useAuth();
+    const { user, isLoaded } = useAuth();
     const [currentView, setCurrentView] = React.useState<'dashboard' | 'portfolio' | 'settings'>('dashboard');
+
+    if (!isLoaded) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
 
     if (!user) {
         return <Login />;

@@ -1,37 +1,35 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext } from 'react';
+import { useUser, useClerk } from '@clerk/clerk-react';
 import { User } from '../types';
 
 interface AuthContextType {
     user: User | null;
-    login: (email: string) => void;
+    login: () => void;
     logout: () => void;
+    isLoaded: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [user, setUser] = useState<User | null>(null);
+    const { user: clerkUser, isLoaded } = useUser();
+    const { openSignIn, signOut } = useClerk();
 
-    useEffect(() => {
-        const storedUser = localStorage.getItem('currentUser');
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
-        }
-    }, []);
+    const user: User | null = (isLoaded && clerkUser) ? {
+        id: clerkUser.id,
+        email: clerkUser.primaryEmailAddress?.emailAddress || ''
+    } : null;
 
-    const login = (email: string) => {
-        const newUser = { email, id: email }; // Simple ID strategy
-        setUser(newUser);
-        localStorage.setItem('currentUser', JSON.stringify(newUser));
+    const login = () => {
+        openSignIn();
     };
 
     const logout = () => {
-        setUser(null);
-        localStorage.removeItem('currentUser');
+        signOut();
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout }}>
+        <AuthContext.Provider value={{ user, login, logout, isLoaded }}>
             {children}
         </AuthContext.Provider>
     );
